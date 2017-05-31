@@ -69,7 +69,7 @@ open class WBManager: NSObject, CBCentralManagerDelegate, WKScriptMessageHandler
 
     // MARK: - CBCentralManagerDelegate
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        NSLog("Bluetooth is \(central.state == CBManagerState.poweredOn ? "ON" : "OFF")")
+        NSLog("Bluetooth is \(central.state == .poweredOn ? "ON" : "OFF")")
     }
     
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {

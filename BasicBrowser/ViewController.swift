@@ -60,7 +60,6 @@ class ViewController: UIViewController, UITextFieldDelegate, WKNavigationDelegat
         }
 
         self.bookmarksManager.addBookmarks([WBBookmark(title: title, url: url)])
-        FlashAnimation(withView: self.tick).go()
     }
 
     @IBAction func reload() {
