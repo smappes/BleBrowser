@@ -22,7 +22,7 @@
 (function () {
     "use strict";
 
-    let wbutils = uk.co.greenparksoftware.wbutils;
+    var wbutils = uk.co.greenparksoftware.wbutils;
 
     function nslog(message) {
         window.webkit.messageHandlers.logger.postMessage(message);
@@ -35,22 +35,22 @@
         return;
     }
 
-    let native;
+    var native;
 
     function _arrayBufferToBase64(buffer) {
-        let binary = '';
-        let bytes = new Uint8Array(buffer);
-        bytes.forEach(function (byte) {
-            binary += String.fromCharCode(byte);
-        });
+        var binary = '';
+        var bytes = new Uint8Array(buffer);
+        for(var i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
         return window.btoa(binary);
     }
 
     function str64todv(str64) {
         // Return a DataView from a base64 encoded DOM String.
-        let str16 = atob(str64);
-        let ab = new Int8Array(str16.length);
-        let ii;
+        var str16 = atob(str64);
+        var ab = new Int8Array(str16.length);
+        var ii;
         for (ii = 0; ii < ab.length; ii += 1) {
             // trusted interface, so don't check this is 0 <= charCode < 256
             ab[ii] = str16.charCodeAt(ii);
@@ -75,12 +75,12 @@
     };
     EventTarget.prototype.removeEventListener = function (type, callback) {
 
-        let stack = this.listeners[type];
+        var stack = this.listeners[type];
         if (stack === undefined) {
             return;
         }
-        let l = stack.length;
-        let ii;
+        var l = stack.length;
+        var ii;
         for (ii = 0; ii < l; ii += 1) {
             if (stack[ii] === callback) {
                 stack.splice(ii, 1);
@@ -89,7 +89,7 @@
         }
     };
     EventTarget.prototype.dispatchEvent = function (event) {
-        let stack = this.listeners[event.type];
+        var stack = this.listeners[event.type];
         if (stack === undefined) {
             return;
         }
@@ -122,7 +122,7 @@
     function BluetoothDevice(deviceJSON) {
         EventTarget.call(this);
 
-        let roProps = {
+        var roProps = {
             adData: {},
             deviceClass: deviceJSON.deviceClass || 0,
             id: deviceJSON.id,
@@ -178,8 +178,8 @@
     }
     BluetoothRemoteGATTServer.prototype = {
         connect: function () {
-            let self = this;
-            let tid = native.getTransactionID();
+            var self = this;
+            var tid = native.getTransactionID();
             this.connectionTransactionIDs.push(tid);
             return this.sendMessage("connectGATT", {callbackID: tid})
                 .then(function () {
@@ -194,9 +194,9 @@
                 });
         },
         disconnect: function () {
-            this.connectionTransactionIDs.forEach((tid) => native.cancelTransaction(tid));
+            this.connectionTransactionIDs.forEach(function(tid) { native.cancelTransaction(tid); });
             this.connectionTransactionIDs = [];
-            let self = this;
+            var self = this;
             return this.sendMessage("disconnectGATT")
                 .then(function () {
                     native.unregisterDeviceForNotifications(self.device);
@@ -204,26 +204,26 @@
                 });
         },
         getPrimaryService: function (UUID) {
-            let canonicalUUID = window.BluetoothUUID.getService(UUID);
-            let self = this;
+            var canonicalUUID = window.BluetoothUUID.getService(UUID);
+            var self = this;
             return this.sendMessage("getPrimaryService", {data: {serviceUUID: canonicalUUID}})
-                .then(() => new native.BluetoothRemoteGATTService(
+                .then(function() { return new native.BluetoothRemoteGATTService(
                     self.device,
                     canonicalUUID,
                     true
-                ));
+                )});
         },
 
         getPrimaryServices: function (UUID) {
             if (true) {
                 throw new Error("Not implemented");
             }
-            let device = this.device;
-            let canonicalUUID = window.BluetoothUUID.getService(UUID);
+            var device = this.device;
+            var canonicalUUID = window.BluetoothUUID.getService(UUID);
             return this.sendMessage("getPrimaryServices", {data: {serviceUUID: canonicalUUID}})
                 .then(function (servicesJSON) {
-                    let servicesData = JSON.parse(servicesJSON);
-                    let services = servicesData;
+                    var servicesData = JSON.parse(servicesJSON);
+                    var services = servicesData;
                     services = device;
                     services = [];
 
@@ -262,8 +262,8 @@
 
     BluetoothRemoteGATTService.prototype = {
         getCharacteristic: function (uuid) {
-            let canonicalUUID = native.BluetoothUUID.getCharacteristic(uuid);
-            let service = this;
+            var canonicalUUID = native.BluetoothUUID.getCharacteristic(uuid);
+            var service = this;
             return this.sendMessage(
                 "getCharacteristic",
                 {data: {characteristicUUID: canonicalUUID}}
@@ -298,7 +298,7 @@
 
     nslog("Create BluetoothRemoteGATTCharacteristic");
     function BluetoothRemoteGATTCharacteristic(service, uuid, properties) {
-        let roProps = {
+        var roProps = {
             service: service,
             properties: properties,
             uuid: uuid
@@ -317,7 +317,7 @@
             throw new Error("Not implemented");
         },
         readValue: function () {
-            let char = this;
+            var char = this;
             return this.sendMessage("readCharacteristicValue")
                 .then(function (valueEncoded) {
                     char.value = str64todv(valueEncoded);
@@ -326,7 +326,7 @@
         },
         writeValue: function (value) {
             // Can't send raw array bytes since we use JSON, so base64 encode.
-            let v64 = _arrayBufferToBase64(value);
+            var v64 = _arrayBufferToBase64(value);
             return this.sendMessage("writeCharacteristicValue", {data: {value: v64}});
         },
         startNotifications: function () {
@@ -369,15 +369,15 @@
 
     function canonicalUUID(uuidAlias) {
         uuidAlias >>>= 0;  // Make sure the number is positive and 32 bits.
-        let strAlias = "0000000" + uuidAlias.toString(16);
+        var strAlias = "0000000" + uuidAlias.toString(16);
         strAlias = strAlias.substr(-8);
         return strAlias + "-0000-1000-8000-00805f9b34fb";
     }
 
-    let uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+    var uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
     nslog("Create BluetoothUUID");
-    let BluetoothUUID = {};
+    var BluetoothUUID = {};
     BluetoothUUID.canonicalUUID = canonicalUUID;
     BluetoothUUID.service = {
         alert_notification: canonicalUUID(0x1811),
@@ -595,7 +595,7 @@
     };
 
     function resolveUUIDName(tableName) {
-        let table = BluetoothUUID[tableName];
+        var table = BluetoothUUID[tableName];
         return function (name) {
             if (typeof name === "number") {
                 return canonicalUUID(name);
@@ -615,13 +615,13 @@
     BluetoothUUID.getDescriptor = resolveUUIDName('descriptor');
 
     nslog("Create bluetooth");
-    let bluetooth = {};
+    var bluetooth = {};
     bluetooth.requestDevice = function (requestDeviceOptions) {
         if (!requestDeviceOptions) {
             return Promise.reject(new TypeError("requestDeviceOptions not provided"));
         }
-        let acceptAllDevices = requestDeviceOptions.acceptAllDevices;
-        let filters = requestDeviceOptions.filters;
+        var acceptAllDevices = requestDeviceOptions.acceptAllDevices;
+        var filters = requestDeviceOptions.filters;
         if (acceptAllDevices) {
             if (filters && filters.length > 0) {
                 return Promise.reject(new TypeError("acceptAllDevices was true but filters was not empty"));
@@ -640,11 +640,11 @@
         } catch (e) {
             return Promise.reject(e);
         }
-        let validatedDeviceOptions = {};
+        var validatedDeviceOptions = {};
         validatedDeviceOptions.filters = filters;
 
         // Optional services not yet suppoprted.
-        // let optionalServices = requestDeviceOptions.optionalServices;
+        // var optionalServices = requestDeviceOptions.optionalServices;
         // if (optionalServices) {
         //     optionalServices = optionalServices.services.map(window.BluetoothUUID.getService);
         //     validatedDeviceOptions.optionalServices = optionalServices;
@@ -672,7 +672,7 @@
         callbacks: {}, // callbacks for responses to requests
 
         cancelTransaction: function (tid) {
-            let trans = this.callbacks[tid];
+            var trans = this.callbacks[tid];
             if (!trans) {
                 console.log("No transaction " + tid + " outstanding to fail.");
                 return;
@@ -681,7 +681,7 @@
             trans(false, "Premature cancellation.");
         },
         getTransactionID: function () {
-            let mc = this.messageCount;
+            var mc = this.messageCount;
             do {
                 mc += 1;
             } while (native.callbacks[mc] !== undefined);
@@ -690,14 +690,14 @@
         },
         sendMessage: function (type, sendMessageParms) {
 
-            let message;
+            var message;
             if (type === undefined) {
                 throw new Error("CallRemote should never be called without a type!");
             }
 
             sendMessageParms = sendMessageParms || {};
-            let data = sendMessageParms.data || {};
-            let callbackID = sendMessageParms.callbackID || this.getTransactionID();
+            var data = sendMessageParms.data || {};
+            var callbackID = sendMessageParms.callbackID || this.getTransactionID();
             message = {
                 type: type,
                 data: data,
@@ -731,11 +731,11 @@
         // {deviceId: BluetoothDevice}
         devicesBeingNotified: {},
         registerDeviceForNotifications: function (device) {
-            let did = device.id;
+            var did = device.id;
             if (native.devicesBeingNotified[did] === undefined) {
                 native.devicesBeingNotified[did] = [];
             }
-            let devs = native.devicesBeingNotified[did];
+            var devs = native.devicesBeingNotified[did];
             devs.forEach(function (dev) {
                 if (dev === device) {
                     throw new Error("Device already registered for notifications");
@@ -745,12 +745,12 @@
             devs.push(device);
         },
         unregisterDeviceForNotifications: function (device) {
-            let did = device.id;
+            var did = device.id;
             if (native.devicesBeingNotified[did] === undefined) {
                 return;
             }
-            let devs = native.devicesBeingNotified[did];
-            let ii;
+            var devs = native.devicesBeingNotified[did];
+            var ii;
             for (ii = 0; ii < devs.length; ii += 1) {
                 if (devs[ii] === device) {
                     devs.splice(ii, 1);
@@ -760,7 +760,7 @@
         },
         receiveDeviceDisconnectEvent: function (deviceId) {
             console.log("<-- device disconnect event", deviceId);
-            let devices = native.devicesBeingNotified[deviceId];
+            var devices = native.devicesBeingNotified[deviceId];
             if (devices !== undefined) {
                 console.log("Device not registered for notifications");
                 devices.forEach(function (device) {
@@ -773,14 +773,14 @@
         characteristicsBeingNotified: {},
         registerCharacteristicForNotifications: function (characteristic) {
 
-            let did = characteristic.service.device.id;
-            let cid = characteristic.uuid;
+            var did = characteristic.service.device.id;
+            var cid = characteristic.uuid;
             console.log("Registering char UUID " + cid + " on device " + did);
 
             if (native.characteristicsBeingNotified[did] === undefined) {
                 native.characteristicsBeingNotified[did] = {};
             }
-            let chars = native.characteristicsBeingNotified[did];
+            var chars = native.characteristicsBeingNotified[did];
             if (chars[cid] === undefined) {
                 chars[cid] = [];
             }
@@ -791,8 +791,8 @@
             characteristicId,
             d64
         ) {
-            let devChars = native.characteristicsBeingNotified[deviceId];
-            let chars = devChars !== undefined
+            var devChars = native.characteristicsBeingNotified[deviceId];
+            var chars = devChars !== undefined
                 ? devChars[characteristicId]
                 : undefined;
             if (chars === undefined) {
@@ -804,7 +804,7 @@
             }
             console.log("<-- char val notification", characteristicId, d64);
             chars.forEach(function (char) {
-                let dataView = str64todv(d64);
+                var dataView = str64todv(d64);
                 char.value = dataView;
                 char.dispatchEvent(new BluetoothEvent("characteristicvaluechanged", char));
             });

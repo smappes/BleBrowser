@@ -4,7 +4,7 @@
 /*global
         atob, BluetoothUUID, Event, uk, window
 */
-eval('var uk = uk || {};');
+var uk = {};
 if (!uk.co) {
     uk.co = {};
 }
@@ -16,11 +16,11 @@ uk.co.greenparksoftware.wbutils = {
         "use strict";
         // implemented as far as possible as per
         // https://webbluetoothcg.github.io/web-bluetooth/#bluetoothlescanfilterinit-canonicalizing
-        let services = filter.services;
-        let name = filter.name;
-        let namePrefix = filter.namePrefix;
+        var services = filter.services;
+        var name = filter.name;
+        var namePrefix = filter.namePrefix;
 
-        let canonicalizedFilter = {};
+        var canonicalizedFilter = {};
 
         if (services === undefined && name === undefined && namePrefix === undefined) {
             throw new TypeError("Filter has no usable properties");
@@ -29,7 +29,7 @@ uk.co.greenparksoftware.wbutils = {
             if (!services) {
                 throw new TypeError('Filter has empty services');
             }
-            let cservs = services.map(BluetoothUUID.getService);
+            var cservs = services.map(BluetoothUUID.getService);
             canonicalizedFilter.services = cservs;
         }
 
