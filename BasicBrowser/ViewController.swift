@@ -110,7 +110,11 @@ class ViewController: UIViewController, UITextFieldDelegate, WKNavigationDelegat
 
         // Load last location
         var lastLocation: String
-        if let prefLoc = UserDefaults.standard.value(forKey: ViewController.prefKeys.lastLocation.rawValue) as? String {
+        if(!launchLocationUrlString.isEmpty) {
+            lastLocation = launchLocationUrlString
+            launchLocationUrlString = ""
+        }
+        else if let prefLoc = UserDefaults.standard.value(forKey: ViewController.prefKeys.lastLocation.rawValue) as? String {
             lastLocation = prefLoc
         } else {
             let svers = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
@@ -124,6 +128,7 @@ class ViewController: UIViewController, UITextFieldDelegate, WKNavigationDelegat
         self.goForwardButton.action = #selector(self.webView.goForward)
         self.refreshButton.target = self
         self.refreshButton.action = #selector(self.reload)
+        mainViewLoaded = true;
     }
 
     override func viewWillAppear(_ animated: Bool) {
